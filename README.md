@@ -1,5 +1,7 @@
 # Caldrin Search (open edition)
 
+A hosted version runs at [search.caldrin.co](https://search.caldrin.co). Built by [@ankurmans](https://github.com/ankurmans).
+
 A self-hosted SEO and AI-visibility workspace for one project on your own Cloudflare account (Workers, D1, KV, R2). You bring your own provider keys; nothing is billed or proxied through anyone else.
 
 Included: keyword research, rank tracking, site audits, backlinks, AI-answer monitoring with source evidence, Content Studio, Change Ledger, reports and exports, and a scoped MCP server.
