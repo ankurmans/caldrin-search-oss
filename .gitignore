@@ -1,0 +1,11 @@
+node_modules
+.dev.vars
+.env
+.env.*
+!.env.example
+dist/
+.wrangler/
+.tanstack/
+.DS_Store
+*.log
+/src/public/report-widgets/

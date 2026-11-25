@@ -1,0 +1,221 @@
+import { cn } from "cn";
+import { z } from "zod";
+import { Button } from "@/client/components/ui/button";
+import {
+  getCurrentAuthRedirect,
+  getOAuthSignedQuery,
+} from "@/lib/auth-redirect";
+import { usesBetterAuthClient } from "@/lib/auth-mode";
+import type { useGoogleAuth } from "./useGoogleAuth";
+
+export const authRedirectSearchSchema = z.object({
+  redirect: z.string().optional(),
+});
+
+// The auth forms keep their pre-shadcn look: white inputs with 16px text, and a
+// soft gray submit button.
+export const authInputClassName =
+  "border-foreground/20 bg-card text-base md:text-base";
+export const authSubmitClassName =
+  "w-full border-border bg-[color-mix(in_oklab,var(--card),var(--foreground)_8%)] font-semibold hover:bg-[color-mix(in_oklab,var(--card),var(--foreground)_12%)]";
+
+export function useAuthPageState(redirect: string | undefined) {
+  const redirectTo = getCurrentAuthRedirect(redirect);
+  const oauthQuery =
+    typeof window !== "undefined"
+      ? getOAuthSignedQuery(window.location.search)
+      : null;
+  const isBetterAuthMode = usesBetterAuthClient();
+
+  return { redirectTo, oauthQuery, isBetterAuthMode };
+}
+
+const termsLinkClassName =
+  "text-foreground underline underline-offset-2 hover:text-foreground/80 transition-colors";
+
+// Clickwrap: shown next to every button that can create an account, so
+// clicking it is the affirmative acceptance the signup hook records.
+export function TermsAgreementNotice({ action }: { action: string }) {
+  return (
+    <p className="text-center text-xs leading-relaxed text-muted-foreground">
+      {action}, you agree to our{" "}
+      <a
+        href="/terms"
+        target="_blank"
+        rel="noreferrer"
+        className={termsLinkClassName}
+      >
+        Terms
+      </a>{" "}
+      and{" "}
+      <a
+        href="/privacy"
+        target="_blank"
+        rel="noreferrer"
+        className={termsLinkClassName}
+      >
+        Privacy Policy
+      </a>
+      .
+    </p>
+  );
+}
+
+type GoogleAuth = ReturnType<typeof useGoogleAuth>;
+
+export function AuthMethodChooser({
+  googleLabel,
+  emailLabel = "Continue with email",
+  disabled,
+  google,
+  onContinueWithEmail,
+  emailSlot,
+}: {
+  googleLabel: string;
+  emailLabel?: string;
+  disabled?: boolean;
+  google: GoogleAuth;
+  onContinueWithEmail?: () => void;
+  /** Replaces the "Continue with email" button, so the email form is on the first view. */
+  emailSlot?: React.ReactNode;
+}) {
+  // Google's button format is the one Google approves.
+  const googleButtonClassName =
+    "w-full border-black/10 !bg-white font-semibold !text-neutral-900 hover:border-black/20 hover:!bg-neutral-50";
+  return (
+    <div className="space-y-3">
+      <Button
+        type="button"
+        variant="outline"
+        className={googleButtonClassName}
+        onClick={() => {
+          void google.start();
+        }}
+        disabled={disabled || google.isStarting}
+      >
+        <GoogleLogo />
+        {google.isStarting ? "Opening Google..." : googleLabel}
+      </Button>
+
+      <div
+        role="separator"
+        className="flex items-center gap-3 py-1 text-xs text-muted-foreground"
+      >
+        <span className="h-px flex-1 bg-border" />
+        or
+        <span className="h-px flex-1 bg-border" />
+      </div>
+
+      {emailSlot ?? (
+        <Button
+          type="button"
+          variant="outline"
+          className="w-full bg-card font-semibold dark:border-border dark:bg-card"
+          onClick={onContinueWithEmail}
+          disabled={disabled || google.isStarting}
+        >
+          {emailLabel}
+        </Button>
+      )}
+    </div>
+  );
+}
+
+function GoogleLogo() {
+  return (
+    <svg aria-hidden="true" viewBox="0 0 18 18" className="size-4 shrink-0">
+      <path
+        fill="#4285F4"
+        d="M17.64 9.2c0-.64-.06-1.25-.16-1.84H9v3.48h4.84a4.14 4.14 0 0 1-1.8 2.72v2.26h2.92c1.7-1.57 2.68-3.88 2.68-6.62Z"
+      />
+      <path
+        fill="#34A853"
+        d="M9 18c2.43 0 4.47-.8 5.96-2.18l-2.92-2.26c-.8.54-1.84.86-3.04.86-2.34 0-4.33-1.58-5.04-3.72H.94v2.34A9 9 0 0 0 9 18Z"
+      />
+      <path
+        fill="#FBBC05"
+        d="M3.96 10.7A5.4 5.4 0 0 1 3.68 9c0-.59.1-1.16.28-1.7V4.96H.94A9 9 0 0 0 0 9c0 1.45.34 2.82.94 4.04l3.02-2.34Z"
+      />
+      <path
+        fill="#EA4335"
+        d="M9 3.58c1.32 0 2.5.45 3.44 1.35l2.58-2.58A8.64 8.64 0 0 0 9 0 9 9 0 0 0 .94 4.96L3.96 7.3C4.67 5.16 6.66 3.58 9 3.58Z"
+      />
+    </svg>
+  );
+}
+
+export function AuthPageCard({
+  title,
+  helperText,
+  children,
+  footer,
+  className,
+}: {
+  title: string;
+  helperText?: string;
+  children: React.ReactNode;
+  footer?: React.ReactNode;
+  className?: string;
+}) {
+  return (
+    <div
+      className={cn(
+        "w-full max-w-sm space-y-6 rounded-2xl border border-foreground/10 bg-card/60 p-8 shadow-sm",
+        className,
+      )}
+    >
+      <div className="space-y-3 text-center">
+        <img
+          src="/transparent-logo.png"
+          alt="Caldrin Search"
+          className="mx-auto size-10 rounded-lg"
+        />
+        <div className="space-y-0.5">
+          <p className="text-lg font-semibold">Caldrin Search</p>
+          <p className="text-sm text-muted-foreground">
+            Your search visibility workspace
+          </p>
+        </div>
+        <div className="pt-3">
+          <h1 className="text-xl font-semibold text-balance">{title}</h1>
+          {helperText ? (
+            <p className="mt-1 text-sm text-muted-foreground">{helperText}</p>
+          ) : null}
+        </div>
+      </div>
+
+      <div className="space-y-4">{children}</div>
+
+      {footer ? <div className="text-center">{footer}</div> : null}
+    </div>
+  );
+}
+
+export function AuthPageShell({
+  children,
+  aside,
+}: {
+  children: React.ReactNode;
+  /** Shown as a second column from the `lg` breakpoint up. */
+  aside?: React.ReactNode;
+}) {
+  return (
+    <div className={aside ? "grid h-[100dvh] lg:grid-cols-2" : undefined}>
+      {/* `h-[100dvh]` + `overflow-y-auto` makes this a scroll container, and the
+          auto-margin child centers when it fits but stays fully reachable (top
+          and bottom) when it's taller than the viewport. Plain
+          `justify-center` clips the overflow with no way to scroll to it. */}
+      <div
+        className={cn(
+          "flex flex-col items-center overflow-y-auto bg-[color-mix(in_oklab,var(--background),var(--primary)_10%)] p-4",
+          aside ? "h-full" : "h-[100dvh]",
+        )}
+      >
+        <div className="m-auto flex w-full flex-col items-center">
+          {children}
+        </div>
+      </div>
+      {aside}
+    </div>
+  );
+}

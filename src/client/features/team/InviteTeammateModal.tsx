@@ -1,0 +1,234 @@
+import { useMutation } from "@tanstack/react-query";
+import { useState } from "react";
+import { revalidateLogic } from "@tanstack/react-form";
+import { toast } from "sonner";
+import { z } from "zod";
+import { useAppForm } from "@/client/components/form/useAppForm";
+import { Input } from "@/client/components/ui/input";
+import { Button } from "@/client/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/client/components/ui/dialog";
+import { getErrorCode } from "@/client/lib/error-messages";
+import { captureClientEvent } from "@/client/lib/posthog";
+import { usesBetterAuthClient } from "@/lib/auth-mode";
+import { ProjectAccessPicker } from "@/client/features/team/ProjectAccessPicker";
+import {
+  roleUsesProjectAccess,
+  type InvitableRole,
+} from "@/lib/org-permissions";
+import { sendTeamInvitation } from "@/serverFunctions/organization";
+
+const ROLE_OPTIONS: Array<{
+  value: InvitableRole;
+  label: string;
+  hint: string;
+}> = [
+  {
+    value: "admin",
+    label: "Admin",
+    hint: "All projects, can invite people. No billing.",
+  },
+  {
+    value: "project_member",
+    label: "Project teammate",
+    hint: "Can work in the projects you select. Uses a team seat.",
+  },
+  {
+    value: "scoped",
+    label: "Client guest",
+    hint: "Can read reports you publish for the projects you select.",
+  },
+];
+
+const inviteSchema = z.object({
+  email: z.string().trim().email("Enter a valid email address."),
+});
+
+export function inviteErrorMessage(error: Error) {
+  const code = getErrorCode(error);
+  if (code === "RATE_LIMITED") {
+    return "Invitation limit reached for today. Try again tomorrow.";
+  }
+  if (code === "UPSTREAM_UNAVAILABLE") {
+    return "The invitation was saved but the email couldn't be sent. Use Resend in a moment to retry.";
+  }
+  return "We couldn't send that invitation.";
+}
+
+// Without an email transport (password mode) the server hands
+// back the invitation link for the inviter to pass on; with one, it was sent.
+export function announceInvitation(
+  result: { invitationId: string; inviteUrl?: string },
+  sentMessage: string,
+) {
+  if (!result.inviteUrl) {
+    toast.success(sentMessage);
+    return;
+  }
+  const inviteUrl = result.inviteUrl;
+  void (
+    navigator.clipboard?.writeText(inviteUrl) ?? Promise.reject(new Error())
+  ).then(
+    () => toast.success("Invitation link copied"),
+    () =>
+      toast.success("Invitation link", {
+        description: (
+          <Input
+            value={inviteUrl}
+            readOnly
+            aria-label="Invitation link"
+            onFocus={(event) => event.currentTarget.select()}
+            data-ph-no-capture
+          />
+        ),
+        duration: 20000,
+      }),
+  );
+}
+
+export function InviteTeammateModal({
+  client,
+  onClose,
+  onInvited,
+}: {
+  client: boolean;
+  onClose: () => void;
+  onInvited: () => void;
+}) {
+  // Server function (not authClient.inviteMember): it enforces the daily send
+  // limits and fails visibly when the invite email doesn't send.
+  const [role, setRole] = useState<InvitableRole>(
+    client ? "scoped" : "project_member",
+  );
+  const [projectIds, setProjectIds] = useState<string[]>([]);
+  const inviteMutation = useMutation({
+    mutationFn: (inviteeEmail: string) =>
+      sendTeamInvitation({
+        data: {
+          email: inviteeEmail,
+          role,
+          projectIds: roleUsesProjectAccess(role) ? projectIds : [],
+        },
+      }),
+    onSuccess: (result) => {
+      captureClientEvent("team:invitation_send");
+      announceInvitation(result, "Invitation sent");
+      onInvited();
+      onClose();
+    },
+    onError: (error: Error) => {
+      if (getErrorCode(error) === "CONFLICT") {
+        form.setErrorMap({
+          onSubmit: { fields: { email: "This person is already a member." } },
+        });
+      } else {
+        toast.error(inviteErrorMessage(error));
+      }
+      // An email-send failure still creates the pending row — show it.
+      onInvited();
+    },
+  });
+
+  const sharesLink = usesBetterAuthClient();
+
+  const form = useAppForm({
+    defaultValues: { email: "" },
+    validationLogic: revalidateLogic(),
+    validators: { onDynamic: inviteSchema },
+    onSubmit: ({ value }) => inviteMutation.mutateAsync(value.email.trim()),
+  });
+
+  return (
+    <Dialog
+      open
+      onOpenChange={(open) => {
+        if (!open && !inviteMutation.isPending) onClose();
+      }}
+    >
+      <DialogContent showCloseButton={false} className="sm:max-w-md">
+        <form.AppForm>
+          <form.Form className="flex flex-col gap-4">
+            <DialogHeader>
+              <DialogTitle>
+                {client ? "Invite a client" : "Invite a teammate"}
+              </DialogTitle>
+              <DialogDescription>
+                {sharesLink
+                  ? "Share the invitation link with them; they create their account from it. It expires in 7 days."
+                  : "The invitation link expires in 7 days."}
+              </DialogDescription>
+            </DialogHeader>
+            <form.AppField name="email">
+              {(field) => (
+                <field.TextField
+                  label="Email"
+                  type="email"
+                  placeholder={
+                    client ? "client@company.com" : "teammate@company.com"
+                  }
+                  required
+                  autoFocus
+                />
+              )}
+            </form.AppField>
+            <div className="space-y-2">
+              <p className="text-sm font-medium">Access</p>
+              <div className="grid gap-1.5">
+                {ROLE_OPTIONS.filter(
+                  (option) => client === (option.value === "scoped"),
+                ).map((option) => (
+                  <label
+                    key={option.value}
+                    className="flex cursor-pointer items-start gap-2 rounded-lg border p-2.5 text-sm has-[:checked]:border-primary"
+                  >
+                    <input
+                      type="radio"
+                      name="invite-role"
+                      className="mt-1"
+                      checked={role === option.value}
+                      onChange={() => setRole(option.value)}
+                    />
+                    <span>
+                      <span className="font-medium">{option.label}</span>
+                      <span className="block text-xs text-muted-foreground">
+                        {option.hint}
+                      </span>
+                    </span>
+                  </label>
+                ))}
+              </div>
+              {roleUsesProjectAccess(role) ? (
+                <ProjectAccessPicker
+                  value={projectIds}
+                  onChange={setProjectIds}
+                />
+              ) : null}
+            </div>
+            <DialogFooter>
+              <Button
+                variant="ghost"
+                onClick={onClose}
+                disabled={inviteMutation.isPending}
+              >
+                Cancel
+              </Button>
+              <form.SubmitButton
+                disabled={
+                  roleUsesProjectAccess(role) && projectIds.length === 0
+                }
+              >
+                Send invite
+              </form.SubmitButton>
+            </DialogFooter>
+          </form.Form>
+        </form.AppForm>
+      </DialogContent>
+    </Dialog>
+  );
+}

@@ -1,0 +1,1 @@
+ALTER TABLE `shopify_connections` ADD `is_development_store` integer DEFAULT false NOT NULL;

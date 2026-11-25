@@ -1,0 +1,86 @@
+// Template: replace every REPLACE_ value with your own Cloudflare resources.
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "workers_dev": false,
+  "preview_urls": false,
+  "compatibility_date": "2025-09-02",
+  "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "REPLACE_WITH_YOUR_D1_NAME",
+      "database_id": "REPLACE_WITH_YOUR_D1_DATABASE_ID",
+      "migrations_dir": "drizzle/sqlite",
+    },
+  ],
+  "kv_namespaces": [
+    {
+      "binding": "KV",
+      "id": "REPLACE_WITH_YOUR_KV_NAMESPACE_ID",
+    },
+    {
+      "binding": "OAUTH_KV",
+      "id": "REPLACE_WITH_YOUR_OAUTH_KV_NAMESPACE_ID",
+    },
+  ],
+  "r2_buckets": [
+    {
+      "binding": "R2",
+      "bucket_name": "REPLACE_WITH_YOUR_R2_BUCKET",
+    },
+  ],
+  "name": "caldrin-search-byok-preview",
+  "main": "src/server.ts",
+  "vars": {
+    "AUTH_MODE": "password",
+    "BETTER_AUTH_URL": "https://REPLACE_WITH_YOUR_HOSTNAME",
+  },
+  // Every 5 minutes: scheduled checks. Daily: retention and clean-up jobs.
+  // The expressions are matched in src/server.ts, so keep them as written.
+  "triggers": {
+    "crons": ["*/5 * * * *", "17 3 * * *"],
+  },
+  "workflows": [
+    {
+      "name": "site-audit-workflow",
+      "binding": "SITE_AUDIT_WORKFLOW",
+      "class_name": "SiteAuditWorkflow",
+      "script_name": "caldrin-search-audit-byok-preview",
+    },
+    {
+      "name": "rank-check-workflow",
+      "binding": "RANK_CHECK_WORKFLOW",
+      "class_name": "RankCheckWorkflow",
+    },
+    {
+      "name": "ai-visibility-workflow",
+      "binding": "AI_VISIBILITY_WORKFLOW",
+      "class_name": "AiVisibilityWorkflow",
+    },
+    {
+      "name": "local-rank-workflow",
+      "binding": "LOCAL_RANK_WORKFLOW",
+      "class_name": "LocalRankWorkflow",
+    },
+  ],
+  "services": [
+    {
+      "binding": "AUDIT_ENGINE",
+      "service": "caldrin-search-audit-byok-preview",
+    },
+  ],
+  "durable_objects": {
+    "bindings": [
+      {
+        "name": "SAM_CHAT",
+        "class_name": "SamChatAgent",
+      },
+    ],
+  },
+  "migrations": [
+    {
+      "tag": "v1",
+      "new_sqlite_classes": ["SamChatAgent"],
+    },
+  ],
+}

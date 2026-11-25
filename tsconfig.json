@@ -1,0 +1,39 @@
+{
+  "include": ["**/*.ts", "**/*.tsx"],
+  "exclude": ["tests/badseo/**/*", "src/report-widgets/**/*"],
+  "compilerOptions": {
+    "strict": true,
+    "esModuleInterop": true,
+    "jsx": "react-jsx",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    // ES2022 is the browser-support floor: ES2023 array methods (toSorted,
+    // toReversed, findLast, ...) crash Chromium <110. Don't bump this to fix a
+    // missing-method error — use Remeda's sort/sortBy/findLast instead.
+    "lib": ["DOM", "DOM.Iterable", "ES2022"],
+    "isolatedModules": true,
+    "allowImportingTsExtensions": true,
+    "resolveJsonModule": true,
+    "skipLibCheck": true,
+    "target": "ES2022",
+    "allowJs": true,
+    "forceConsistentCasingInFileNames": true,
+    "paths": {
+      "@/shared/hosted-origin": ["./src/shared/hosted-origin.byok.ts"],
+      "@/server/lib/workspace-provider-key": ["./src/server/lib/workspace-provider-key.byok.ts"],
+      "@/client/features/ai-mcp/agentSetupPrompt": ["./src/client/features/ai-mcp/agentSetupPrompt.byok.ts"],
+      "@/client/features/billing/BillingSettings": ["./src/client/features/settings/UnavailableBillingSettings.tsx"],
+      "@/server/admin-dashboard/handler": ["./src/server/lib/hosted-endpoints.byok.ts"],
+      "@/server/standalone/admin": ["./src/server/lib/hosted-endpoints.byok.ts"],
+      "@/server/standalone/openai-apps-challenge": ["./src/server/lib/hosted-endpoints.byok.ts"],
+      "@/server/features/billing/polarWebhook": ["./src/server/lib/hosted-endpoints.byok.ts"],
+      "@/server/features/sam/factSheet": ["./src/server/features/sam/factSheet.byok.ts"],
+      "@/server/features/sam/samSkills": ["./src/server/features/sam/samSkills.byok.ts"],
+      "@/server/features/billing/wallet": ["./src/server/lib/collection-funding.byok.ts"],
+      "@/server/features/billing/platformAccess": ["./src/server/lib/platform-access.byok.ts"],
+      "@/server/features/ai-claims/claimFunding": ["./src/server/features/ai-claims/claimFunding.byok.ts"],
+      "@/*": ["./src/*"]
+    },
+    "noEmit": true
+  }
+}

@@ -1,0 +1,1 @@
+ALTER TABLE "shopify_connections" ADD COLUMN "blog_id" text;

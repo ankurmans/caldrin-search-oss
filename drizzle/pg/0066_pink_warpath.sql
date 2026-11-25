@@ -1,0 +1,1 @@
+ALTER TABLE "shopify_connections" ADD COLUMN "is_development_store" boolean DEFAULT false NOT NULL;

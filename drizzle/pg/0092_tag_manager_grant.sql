@@ -1,0 +1,1 @@
+CREATE UNIQUE INDEX "account_tag_manager_grant_owner_idx" ON "account" USING btree ("user_id","provider_id","account_id") WHERE "account"."provider_id" = 'google-tag-manager';

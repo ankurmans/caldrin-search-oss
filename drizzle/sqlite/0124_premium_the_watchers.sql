@@ -1,0 +1,1 @@
+ALTER TABLE `reports` ADD `client_visible` integer DEFAULT false NOT NULL;

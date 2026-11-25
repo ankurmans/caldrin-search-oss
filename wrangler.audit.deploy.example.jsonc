@@ -1,0 +1,51 @@
+// Template: replace every REPLACE_ value with your own Cloudflare resources.
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "workers_dev": false,
+  "preview_urls": false,
+  "compatibility_date": "2025-09-02",
+  "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "REPLACE_WITH_YOUR_D1_NAME",
+      "database_id": "REPLACE_WITH_YOUR_D1_DATABASE_ID",
+      "migrations_dir": "drizzle/sqlite",
+    },
+  ],
+  "kv_namespaces": [
+    {
+      "binding": "KV",
+      "id": "REPLACE_WITH_YOUR_KV_NAMESPACE_ID",
+    },
+  ],
+  "r2_buckets": [
+    {
+      "binding": "R2",
+      "bucket_name": "REPLACE_WITH_YOUR_R2_BUCKET",
+    },
+  ],
+  "name": "caldrin-search-audit-byok-preview",
+  "main": "src/audit-worker.ts",
+  "workflows": [
+    {
+      "name": "site-audit-workflow",
+      "binding": "SITE_AUDIT_WORKFLOW",
+      "class_name": "SiteAuditWorkflow",
+    },
+  ],
+  "durable_objects": {
+    "bindings": [
+      {
+        "name": "AUDIT_SCRATCHPAD",
+        "class_name": "AuditScratchpad",
+      },
+    ],
+  },
+  "migrations": [
+    {
+      "tag": "v1",
+      "new_sqlite_classes": ["AuditScratchpad"],
+    },
+  ],
+}

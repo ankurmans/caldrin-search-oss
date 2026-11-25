@@ -1,0 +1,1 @@
+ALTER TABLE `shopify_connections` ADD `auto_publish` integer DEFAULT false NOT NULL;

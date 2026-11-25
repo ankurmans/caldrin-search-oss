@@ -1,0 +1,1 @@
+ALTER TABLE "ai_perception_experiments" ADD COLUMN "approved_by" text;

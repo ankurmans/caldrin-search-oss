@@ -1,0 +1,1 @@
+ALTER TABLE "workspace_settings" ADD COLUMN "trial_spent_usd" real DEFAULT 0 NOT NULL;

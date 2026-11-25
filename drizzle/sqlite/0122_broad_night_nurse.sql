@@ -1,0 +1,1 @@
+ALTER TABLE `content_assets` ADD `reviewer_user_id` text;
