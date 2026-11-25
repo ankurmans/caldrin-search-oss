@@ -214,7 +214,7 @@ export function AuthPageShell({
         <div className="m-auto flex w-full flex-col items-center">
           {children}
           <a
-            href="https://github.com/caldrin-co/caldrin-search-oss"
+            href="https://github.com/ankurmans/caldrin-search-oss"
             target="_blank"
             rel="noreferrer"
             className="mt-4 text-xs text-muted-foreground underline underline-offset-2 transition-colors hover:text-foreground"

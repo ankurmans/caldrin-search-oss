@@ -5,8 +5,8 @@
 **See where you rank in Google, and what AI answers say about you. On your own Cloudflare account, with your own keys.**
 
 [![Licence: AGPL v3](https://img.shields.io/badge/licence-AGPL--3.0-blue)](LICENSE)
-[![Latest release](https://img.shields.io/github/v/release/caldrin-co/caldrin-search-oss?color=brightgreen)](https://github.com/caldrin-co/caldrin-search-oss/releases)
-[![GitHub stars](https://img.shields.io/github/stars/caldrin-co/caldrin-search-oss?style=flat&color=yellow)](https://github.com/caldrin-co/caldrin-search-oss/stargazers)
+[![Latest release](https://img.shields.io/github/v/release/ankurmans/caldrin-search-oss?color=brightgreen)](https://github.com/ankurmans/caldrin-search-oss/releases)
+[![GitHub stars](https://img.shields.io/github/stars/ankurmans/caldrin-search-oss?style=flat&color=yellow)](https://github.com/ankurmans/caldrin-search-oss/stargazers)
 ![Self-hosted](https://img.shields.io/badge/self--hosted-yes-success)
 
 ![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?logo=typescript&logoColor=white)
